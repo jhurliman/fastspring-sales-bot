@@ -2,19 +2,10 @@ exports.handler = (event, context, callback) => {
   const slackWebhook = process.env.SLACK_WEBHOOK
   if (!slackWebhook) return callback(`SLACK_WEBHOOK is not set`)
 
-  let body
-  try {
-    body = JSON.parse(event.body)
-    if (!body || !Array.isArray(body.items))
-      return callback(`Unrecognized request body: Event: ${str(event)}`)
-  } catch (ex) {
-    return callback(
-      `Failed to parse request body. Error: ${ex}, Event: ${str(event)}`
-    )
-  }
+  console.log(JSON.stringify(event))
+  const msg = buildSlackMessage(event)
 
-  buildSlackMessage(body)
-    .then(msg => postJSON(slackWebhook, msg))
+  postJSON(slackWebhook, msg)
     .then(_ => 'Success')
     .then(status => callback(null, status))
     .catch(err => callback(err))
@@ -24,14 +15,13 @@ function buildSlackMessage(body) {
   const msg = {
     attachments: [
       {
-        fallback: 'Purchase complete',
+        fallback: '',
         color: 'good',
-        pretext: 'Purchase complete',
-        title: 'Summary',
+        title: 'Purchase complete',
         author_name: 'FastSpring',
         author_icon:
           'https://fastspring.com/wp/wp-content/uploads/2016/09/android-chrome-192x192.png',
-        fields: createFields(body.items)
+        fields: createFields(body)
       }
     ]
   }
@@ -44,20 +34,16 @@ function createFields(body) {
 
   return [
     {
-      title: 'Customer',
-      value: `${customer.first} ${customer.last} (${customer.email})`,
-      short: true
-    },
-    {
-      title: 'Revenue',
-      value: body.totalInPayoutCurrencyDisplay,
+      title: `${customer.first} ${customer.last}`,
+      value: `${customer.email}`,
       short: true
     }
   ].concat(
     body.items.map(item => {
+      const quantity = item.quantity > 1 ? ` (x${item.quantity})` : ''
       return {
-        title: `${item.display} (x${item.quantity})`,
-        value: item.subtotalInPayoutCurrencyDisplay || '?',
+        title: `${item.display}${quantity}`,
+        value: formatCurrency(item.subtotalInPayoutCurrencyDisplay),
         short: true
       }
     })
@@ -67,7 +53,7 @@ function createFields(body) {
 function postJSON(url, data) {
   // Coerce data into a string if needed
   if (data instanceof Buffer) data = data.toString()
-  else if (typeof data !== 'string') data = str(data)
+  else if (typeof data !== 'string') data = JSON.stringify(data)
 
   const urlParts = require('url').parse(url)
   const isHTTPS = urlParts.protocol === 'https:'
@@ -96,6 +82,6 @@ function postJSON(url, data) {
   })
 }
 
-function str(obj) {
-  return JSON.stringify(obj)
+function formatCurrency(value) {
+  return (value || '?').replace('USD ', '$')
 }
