@@ -1,0 +1,19 @@
+{
+  "name": "fastspring-sales-bot",
+  "version": "1.0.0",
+  "description": "Post FastSpring sales to Slack",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jhurliman/fastspring-sales-bot.git"
+  },
+  "author": "John Hurliman <jhurliman@jhurliman.org>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/jhurliman/fastspring-sales-bot/issues"
+  },
+  "homepage": "https://github.com/jhurliman/fastspring-sales-bot#readme"
+}
